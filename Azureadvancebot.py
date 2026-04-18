@@ -2,10 +2,10 @@ import os, re, json, tempfile, requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 import yt_dlp
-import google.generativeai as genai
+from google import genai
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 SYSTEM_PROMPT = """
 You are an AI download agent inside Telegram.
@@ -20,9 +20,11 @@ Reply with valid JSON only. Nothing else.
 """
 
 def ask_ai(text):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    r = model.generate_content(SYSTEM_PROMPT + "\nUser: " + text)
-    return r.text.strip()
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=SYSTEM_PROMPT + "\nUser: " + text
+    )
+    return response.text.strip()
 
 def download_youtube(query):
     with tempfile.TemporaryDirectory() as tmp:
@@ -103,7 +105,7 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         elif action == "chat":
             await update.message.reply_text(data.get("reply", "I'm here!"))
 
-    except Exception:
+    except Exception as e:
         await update.message.reply_text("⚠️ Something went wrong, try again!")
 
 if __name__ == "__main__":
@@ -111,3 +113,9 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     print("🚀 Bot is LIVE!")
     app.run_polling()
+Commit karo ✅
+Phir requirements.txt mein yeh paste karo:
+python-telegram-bot>=20.0
+yt-dlp
+google-genai
+requests
