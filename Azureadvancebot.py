@@ -2,10 +2,10 @@ import os, re, json, tempfile, requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 import yt_dlp
-import anthropic
+import google.generativeai as genai
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 SYSTEM_PROMPT = """
 You are an AI download agent inside Telegram.
@@ -20,13 +20,9 @@ Reply with valid JSON only. Nothing else.
 """
 
 def ask_ai(text):
-    r = client.messages.create(
-        model="claude-opus-4-5",
-        max_tokens=200,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": text}]
-    )
-    return r.content[0].text.strip()
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    r = model.generate_content(SYSTEM_PROMPT + "\nUser: " + text)
+    return r.text.strip()
 
 def download_youtube(query):
     with tempfile.TemporaryDirectory() as tmp:
@@ -75,7 +71,9 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     await update.message.reply_text("🤖 Working on it...")
     try:
-        data = json.loads(ask_ai(text))
+        raw = ask_ai(text)
+        raw = raw.replace("```json","").replace("```","").strip()
+        data = json.loads(raw)
         action = data.get("action")
 
         if action == "youtube":
