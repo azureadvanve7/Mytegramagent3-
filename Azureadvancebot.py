@@ -71,7 +71,7 @@ def get_image(query):
 
 async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
-    await update.message.reply_text("🤖 Working on it...")
+    await update.message.reply_text("Working on it...")
     try:
         raw = ask_ai(text)
         raw = raw.replace("```json","").replace("```","").strip()
@@ -79,43 +79,37 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         action = data.get("action")
 
         if action == "youtube":
-            await update.message.reply_text(f"🔍 Searching: {data['query']}")
+            await update.message.reply_text("Searching: " + data["query"])
             fb, fn = download_youtube(data["query"])
             if fb:
-                await update.message.reply_document(fb, filename=fn, caption="✅ Done!")
+                await update.message.reply_document(fb, filename=fn, caption="Done!")
             else:
-                await update.message.reply_text("❌ Not found. Try different words.")
+                await update.message.reply_text("Not found. Try different words.")
 
         elif action == "pdf":
-            await update.message.reply_text(f"📄 Finding PDF: {data['query']}")
+            await update.message.reply_text("Finding PDF: " + data["query"])
             fb, fn = get_pdf(data["query"])
             if fb:
-                await update.message.reply_document(fb, filename=fn or "file.pdf", caption="✅ Here!")
+                await update.message.reply_document(fb, filename=fn or "file.pdf", caption="Here!")
             else:
-                await update.message.reply_text("❌ PDF not found publicly.")
+                await update.message.reply_text("PDF not found publicly.")
 
         elif action == "image":
-            await update.message.reply_text(f"🖼️ Finding image: {data['query']}")
+            await update.message.reply_text("Finding image: " + data["query"])
             fb, fn = get_image(data["query"])
             if fb:
-                await update.message.reply_photo(fb, caption="✅ Here!")
+                await update.message.reply_photo(fb, caption="Here!")
             else:
-                await update.message.reply_text("❌ Image not found.")
+                await update.message.reply_text("Image not found.")
 
         elif action == "chat":
-            await update.message.reply_text(data.get("reply", "I'm here!"))
+            await update.message.reply_text(data.get("reply", "I am here!"))
 
     except Exception as e:
-        await update.message.reply_text("⚠️ Something went wrong, try again!")
+        await update.message.reply_text("Something went wrong, try again!")
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
-    print("🚀 Bot is LIVE!")
+    print("Bot is LIVE!")
     app.run_polling()
-Commit karo ✅
-Phir requirements.txt mein yeh paste karo:
-python-telegram-bot>=20.0
-yt-dlp
-google-genai
-requests
